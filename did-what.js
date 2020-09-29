@@ -19,19 +19,21 @@ function processList() {
       chosen.push(x);
     }
   });
-  console.log(chosen.length);
   addCheckMarks(chosen);
 }
 
-let taskLists = document.querySelector(".items-list");
 const config = { attributes: false, childList: true, subtree: true };
 
 const callback = function (mutationsList, observer) {
-  console.log("change detected");
   observer.disconnect();
   processList();
-  observer.observe(taskLists, config);
+  observer.observe(document.querySelector(".items-list"), config);
 };
 
+let taskLists = document.querySelector(".items-list");
 const observer = new MutationObserver(callback);
 observer.observe(taskLists, config);
+
+window.addEventListener("load", (event) => {
+  console.log("page is fully loaded");
+});
