@@ -8,12 +8,21 @@
     "128": "images/codewars.png"
   },
   "web_accessible_resources": ["verified-24px.svg"],
-  "permissions": ["activeTab", "declarativeContent", "storage"],
+  "permissions": [
+    "activeTab",
+    "declarativeContent",
+    "storage",
+    "webNavigation"
+  ],
   "content_scripts": [
     {
       "matches": ["https://www.codewars.com/*"],
       "js": ["did-what.js"],
       "css": ["styles.css"]
     }
-  ]
+  ],
+  "background": {
+    "persistent": false,
+    "scripts": ["engine.js"]
+  }
 }
