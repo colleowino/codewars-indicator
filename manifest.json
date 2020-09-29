@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "dito",
   "description": "An easier way to see what I did or didn't do ",
-  "version": "1.1",
+  "version": "1.2",
   "icons": {
     "32": "images/codewars.png",
     "128": "images/codewars.png"
@@ -11,7 +11,7 @@
   "permissions": ["activeTab", "declarativeContent", "storage"],
   "content_scripts": [
     {
-      "matches": ["https://www.codewars.com/users/missyjeanbeutler/completed"],
+      "matches": ["https://www.codewars.com/*"],
       "js": ["did-what.js"],
       "css": ["styles.css"]
     }
