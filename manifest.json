@@ -8,15 +8,13 @@
     "128": "images/codewars.png"
   },
   "web_accessible_resources": ["verified-24px.svg"],
-  "permissions": [
-    "activeTab",
-    "declarativeContent",
-    "storage",
-    "webNavigation"
-  ],
+  "permissions": ["tabs", "declarativeContent", "storage", "webNavigation"],
   "content_scripts": [
     {
-      "matches": ["https://www.codewars.com/*"],
+      "matches": [
+        "https://www.codewars.com/kata/*",
+        "https://www.codewars.com/users/*/completed"
+      ],
       "js": ["did-what.js"],
       "css": ["styles.css"]
     }

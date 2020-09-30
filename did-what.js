@@ -5,10 +5,26 @@ function buildIcon() {
   return img;
 }
 
+function extractMeta(node) {
+  return {
+    kyu: node.querySelector("span").innerText,
+    label: node.querySelector("a").innerText,
+    link: snagLink(node.querySelector("a").href),
+  };
+}
+
 function addCheckMarks(titles) {
-  titles.forEach((x) => x.append(buildIcon()));
+  titles.forEach((x) => {
+    console.log(extractMeta(x));
+    x.append(buildIcon());
+  });
 }
 let existingTitles = [];
+
+function snagLink(url) {
+  const bits = url.split("/");
+  return bits[bits.length - 1];
+}
 
 function processList() {
   let newTitles = document.querySelectorAll(".item-title");
@@ -34,6 +50,37 @@ let taskLists = document.querySelector(".items-list");
 const observer = new MutationObserver(callback);
 observer.observe(taskLists, config);
 
-window.addEventListener("load", (event) => {
-  console.log("page is fully loaded");
-});
+// window.addEventListener("load", (event) => {
+//   console.log("page is fully loaded");
+// });
+
+const pages = {
+  KATA: "kata",
+  USER: "user",
+  KATALIST: "katalist",
+};
+
+function whichPage() {
+  const url = window.location.href;
+  if (/completed$/.test(window.location.href)) {
+    return pages.USER;
+  }
+  if (/kata\/latest|search/.test(window.location.href)) {
+    return pages.KATALIST;
+  }
+  if (/kata\/\w+$/.test(window.location.href)) {
+    return pages.KATA;
+  }
+}
+
+let currentPage = whichPage();
+console.log(currentPage);
+if (currentPage == pages.KATA) {
+  processList();
+}
+if (currentPage == pages.KATALIST) {
+  processList();
+}
+if (currentPage == pages.USER) {
+  processList();
+}
