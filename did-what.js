@@ -15,7 +15,6 @@ function extractMeta(node) {
 
 function addCheckMarks(titles) {
   titles.forEach((x) => {
-    console.log(extractMeta(x));
     x.append(buildIcon());
   });
 }
@@ -26,42 +25,32 @@ function snagLink(url) {
   return bits[bits.length - 1];
 }
 
-function processList() {
-  let newTitles = document.querySelectorAll(".item-title");
-  let chosen = [];
-  newTitles.forEach((x) => {
-    const svg = buildIcon();
-    if (!x.lastChild.isEqualNode(svg)) {
-      chosen.push(x);
-    }
-  });
-  addCheckMarks(chosen);
+function setupObserver() {
+  const config = { attributes: false, childList: true, subtree: true };
+
+  const callback = function (mutationsList, observer) {
+    observer.disconnect();
+    processList();
+    observer.observe(document.querySelector(".items-list"), config);
+  };
+
+  let taskLists = document.querySelector(".items-list");
+  const observer = new MutationObserver(callback);
+  observer.observe(taskLists, config);
 }
-
-const config = { attributes: false, childList: true, subtree: true };
-
-const callback = function (mutationsList, observer) {
-  observer.disconnect();
-  processList();
-  observer.observe(document.querySelector(".items-list"), config);
-};
-
-let taskLists = document.querySelector(".items-list");
-const observer = new MutationObserver(callback);
-observer.observe(taskLists, config);
-
-// window.addEventListener("load", (event) => {
-//   console.log("page is fully loaded");
-// });
 
 const pages = {
   KATA: "kata",
   USER: "user",
   KATALIST: "katalist",
+  MINE: "myown",
 };
 
 function whichPage() {
   const url = window.location.href;
+  if (/colleowino\/completed$/.test(window.location.href)) {
+    return pages.MINE;
+  }
   if (/completed$/.test(window.location.href)) {
     return pages.USER;
   }
@@ -73,14 +62,54 @@ function whichPage() {
   }
 }
 
+function processList(solved, page) {
+  let newTitles = document.querySelectorAll(".item-title");
+  let chosen = [];
+  let toUpdate = [];
+  newTitles.forEach((x) => {
+    let meta = extractMeta(x);
+    const svg = buildIcon();
+    if (!x.lastChild.isEqualNode(svg)) {
+      if (solved[meta.link]) {
+        chosen.push(x);
+      } else {
+        if (page == pages.MINE) {
+          toUpdate.push(meta);
+        }
+      }
+    }
+  });
+  updateSolved(toUpdate);
+  addCheckMarks(chosen);
+}
+
+function updateComplete(status) {
+  console.log(statu);
+}
+
+function updateSolved(payload) {
+  console.log(payload);
+  // chrome.runtime.sendMessage(payload, (data) => updateComplete(data));
+}
+
 let currentPage = whichPage();
-console.log(currentPage);
-if (currentPage == pages.KATA) {
-  processList();
+
+function dataProcessFunction(params) {
+  // console.log(params);
+  if (currentPage == pages.KATA) {
+    processList(params, currentPage);
+  }
+  if (currentPage == pages.KATALIST) {
+    processList(params, currentPage);
+  }
+  if (currentPage == pages.USER) {
+    processList(params, currentPage);
+  }
+  if (currentPage == pages.MINE) {
+    processList(params, currentPage);
+  }
 }
-if (currentPage == pages.KATALIST) {
-  processList();
-}
-if (currentPage == pages.USER) {
-  processList();
-}
+
+chrome.runtime.sendMessage("http://localhost:3000/completed", (data) =>
+  dataProcessFunction(data)
+);

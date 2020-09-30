@@ -38,3 +38,16 @@ var eventList = [
 //     });
 //   });
 // });
+
+chrome.runtime.onMessage.addListener(function (url, sender, onSuccess) {
+  fetch(url)
+    .then((response) => response.json())
+    .then((responseText) => {
+      let ids = {};
+      responseText.forEach((element) => {
+        ids[element.link] = true;
+      });
+      onSuccess(ids);
+    });
+  return true; // Will respond asynchronously.
+});
