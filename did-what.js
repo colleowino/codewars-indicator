@@ -45,24 +45,6 @@ function extractKata(node) {
   };
 }
 
-function dataProcessFunction(params) {
-  // console.log(params);
-  if (currentPage == pages.KATA) {
-    return processList(params, currentPage);
-  }
-  if (currentPage == pages.KATALIST) {
-    return processList(params, currentPage);
-  }
-  if (currentPage == pages.USER) {
-    return processList(params, currentPage);
-  }
-  if (currentPage == pages.MINE) {
-    const unrecorded = processList(params, currentPage);
-    setupDOMObserver();
-    return unrecorded;
-  }
-}
-
 let ids = {
   "563a631f7cbbc236cf0000c2": true,
   "55ccdf1512938ce3ac000056": true,
@@ -92,7 +74,9 @@ function collectUnsavedKatas(completedKatas) {
       unsavedKatas.push(kata);
     }
   });
-  port.postMessage({ updateData: true, payload: unsavedKatas });
+  if (unsavedKatas.length > 0) {
+    port.postMessage({ updateData: true, payload: unsavedKatas });
+  }
   return true;
 }
 
@@ -104,7 +88,10 @@ function setupDOMObserver() {
   observer = new MutationObserver((mutations) => {
     observer.disconnect();
     markCompletedKatas(ids);
-    // collectUnsavedKatas(ids);
+    if (currentPage == pages.MINE) {
+      collectUnsavedKatas(ids);
+    }
+
     observer.observe(document.querySelector(".items-list"), config);
   });
   observer.observe(document.querySelector(".items-list"), config);
@@ -126,6 +113,7 @@ port.onMessage.addListener(function (resp) {
     markCompletedKatas(ids);
 
     if (currentPage == pages.MINE || currentPage == pages.USER) {
+      collectUnsavedKatas(ids);
       setupDOMObserver();
     }
   }
