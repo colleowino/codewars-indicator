@@ -1,3 +1,5 @@
+const port = chrome.runtime.connect({ name: "serverConnection" });
+
 function buildIcon() {
   let img = document.createElement("img");
   img.setAttribute("src", chrome.runtime.getURL("verified-24px.svg"));
@@ -104,9 +106,10 @@ function dataProcessFunction(params) {
   }
 }
 
-const ids = {
+let ids = {
   "563a631f7cbbc236cf0000c2": true,
   "55ccdf1512938ce3ac000056": true,
+  "540c33513b6532cd58000259": true,
 };
 
 function markCompletedKatas(completedKatas) {
@@ -121,25 +124,47 @@ function markCompletedKatas(completedKatas) {
   });
 }
 
+function collectUnsavedKatas(completedKatas) {
+  let kataTitles = document.querySelectorAll(".item-title");
+  let unsavedKatas = [];
+
+  kataTitles.forEach((title) => {
+    const kata = extractMeta(title);
+    if (!completedKatas[kata.id]) {
+      unsavedKatas.push(kata);
+    }
+  });
+  port.postMessage({ updateData: true, payload: unsavedKatas });
+  return true;
+}
+
+let observer = null;
+
+function setupObserver() {
+  const config = { attributes: false, childList: true, subtree: true };
+
+  observer = new MutationObserver((mutations) => {
+    observer.disconnect();
+    markCompletedKatas(ids);
+    collectUnsavedKatas(ids);
+    observer.observe(document.querySelector(".items-list"), config);
+  });
+  observer.observe(document.querySelector(".items-list"), config);
+}
+
 console.log("Debug: executing content script");
-
-const port = chrome.runtime.connect({ name: "knockknock" });
-
-port.postMessage({ fetchData: true });
 
 port.onMessage.addListener(function (resp) {
   if (resp.dataAvailable) {
-    markCompletedKatas(resp.data);
-    // parse through the page
-    // console.log(msg.data);
-    // toUpdate = dataProcessFunction(resp.data);
-    // console.log(toUpdate);
-    // port.postMessage({ updateData: true, payload: toUpdate });
+    ids = resp.data;
+    markCompletedKatas(ids);
+    setupObserver();
   }
 
   if (resp.dataUpdated) {
-    console.log(resp.responseText);
+    console.log("saved some more");
   }
 });
+port.postMessage({ fetchData: true });
 
 console.log("Debug: End of script");

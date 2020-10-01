@@ -14,7 +14,6 @@ function handlePort(port) {
         });
     }
     if (msg.updateData) {
-      console.log(msg.payload);
       fetch("http://localhost:3000/completed", {
         method: "POST",
         headers: {
@@ -22,11 +21,12 @@ function handlePort(port) {
         },
         body: JSON.stringify(msg.payload),
       })
-        .then((response) => response.json())
         .then((responseText) => {
+          console.log("updated the list");
           port.postMessage({ dataUpdated: true, responseText });
         })
         .catch((error) => {
+          console.log("error");
           port.postMessage({ errorOccured: true, error });
         });
     }
