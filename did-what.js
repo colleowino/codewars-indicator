@@ -12,27 +12,12 @@ function snagLink(url) {
   return bits[bits.length - 1];
 }
 
-function extractMeta(node) {
+function extractKata(node) {
   return {
     kyu: node.querySelector("span").innerText,
     label: node.querySelector("a").innerText,
     id: snagLink(node.querySelector("a").href),
   };
-}
-
-function setupObserver() {
-  const config = { attributes: false, childList: true, subtree: true };
-
-  const callback = function (mutationsList, observer) {
-    console.log("-- status updated -- ");
-    observer.disconnect();
-    processList();
-    observer.observe(document.querySelector(".items-list"), config);
-  };
-
-  let taskLists = document.querySelector(".items-list");
-  const observer = new MutationObserver(callback);
-  observer.observe(taskLists, config);
 }
 
 const pages = {
@@ -57,35 +42,6 @@ function whichPage() {
     return pages.KATA;
   }
 }
-
-function addCheckMarks(titles) {
-  titles.forEach((x) => {
-    x.append(buildIcon());
-  });
-}
-
-function processList(solved = {}, page = pages.MINE) {
-  let newTitles = document.querySelectorAll(".item-title");
-  let chosen = [];
-  let toUpdate = [];
-  newTitles.forEach((x) => {
-    let meta = extractMeta(x);
-    const svg = buildIcon();
-    if (!x.lastChild.isEqualNode(svg)) {
-      if (solved[meta.id]) {
-        chosen.push(x);
-      } else {
-        if (page == pages.MINE) {
-          console.log("some updating to be done");
-          toUpdate.push(meta);
-        }
-      }
-    }
-  });
-  addCheckMarks(chosen);
-  return toUpdate;
-}
-
 let currentPage = whichPage();
 
 function dataProcessFunction(params) {
@@ -101,7 +57,7 @@ function dataProcessFunction(params) {
   }
   if (currentPage == pages.MINE) {
     const unrecorded = processList(params, currentPage);
-    setupObserver();
+    setupDOMObserver();
     return unrecorded;
   }
 }
@@ -117,7 +73,7 @@ function markCompletedKatas(completedKatas) {
   const svg = buildIcon();
 
   kataTitles.forEach((title) => {
-    const metaData = extractMeta(title);
+    const metaData = extractKata(title);
     if (completedKatas[metaData.id] && !title.lastChild.isEqualNode(svg)) {
       title.append(buildIcon());
     }
@@ -129,8 +85,9 @@ function collectUnsavedKatas(completedKatas) {
   let unsavedKatas = [];
 
   kataTitles.forEach((title) => {
-    const kata = extractMeta(title);
+    const kata = extractKata(title);
     if (!completedKatas[kata.id]) {
+      completedKatas[kata.id] = true;
       unsavedKatas.push(kata);
     }
   });
@@ -140,13 +97,13 @@ function collectUnsavedKatas(completedKatas) {
 
 let observer = null;
 
-function setupObserver() {
+function setupDOMObserver() {
   const config = { attributes: false, childList: true, subtree: true };
 
   observer = new MutationObserver((mutations) => {
     observer.disconnect();
     markCompletedKatas(ids);
-    collectUnsavedKatas(ids);
+    // collectUnsavedKatas(ids);
     observer.observe(document.querySelector(".items-list"), config);
   });
   observer.observe(document.querySelector(".items-list"), config);
@@ -154,15 +111,23 @@ function setupObserver() {
 
 console.log("Debug: executing content script");
 
+function scrollToBottom() {
+  window.scrollTo({
+    left: 0,
+    top: document.body.scrollHeight,
+    behavior: "smooth",
+  });
+}
+
 port.onMessage.addListener(function (resp) {
   if (resp.dataAvailable) {
     ids = resp.data;
     markCompletedKatas(ids);
-    setupObserver();
+    setupDOMObserver();
   }
 
   if (resp.dataUpdated) {
-    console.log("saved some more");
+    markCompletedKatas(ids);
   }
 });
 port.postMessage({ fetchData: true });
