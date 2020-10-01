@@ -14,7 +14,7 @@ function extractMeta(node) {
   return {
     kyu: node.querySelector("span").innerText,
     label: node.querySelector("a").innerText,
-    link: snagLink(node.querySelector("a").href),
+    id: snagLink(node.querySelector("a").href),
   };
 }
 
@@ -28,6 +28,7 @@ function setupObserver() {
   const config = { attributes: false, childList: true, subtree: true };
 
   const callback = function (mutationsList, observer) {
+    console.log("-- status updated -- ");
     observer.disconnect();
     processList();
     observer.observe(document.querySelector(".items-list"), config);
@@ -61,7 +62,7 @@ function whichPage() {
   }
 }
 
-function processList(solved, page) {
+function processList(solved = {}, page = pages.MINE) {
   let newTitles = document.querySelectorAll(".item-title");
   let chosen = [];
   let toUpdate = [];
@@ -69,10 +70,11 @@ function processList(solved, page) {
     let meta = extractMeta(x);
     const svg = buildIcon();
     if (!x.lastChild.isEqualNode(svg)) {
-      if (solved[meta.link]) {
+      if (solved[meta.id]) {
         chosen.push(x);
       } else {
         if (page == pages.MINE) {
+          console.log("some updating to be done");
           toUpdate.push(meta);
         }
       }
@@ -96,12 +98,14 @@ function dataProcessFunction(params) {
     return processList(params, currentPage);
   }
   if (currentPage == pages.MINE) {
-    return processList(params, currentPage);
+    const unrecorded = processList(params, currentPage);
+    setupObserver();
+    return unrecorded;
   }
 }
 
 console.log("Debug: executing content script");
-var port = chrome.runtime.connect({ name: "knockknock" });
+const port = chrome.runtime.connect({ name: "knockknock" });
 
 port.postMessage({ fetchData: true });
 
@@ -110,6 +114,11 @@ port.onMessage.addListener(function (msg) {
     console.log(msg.data);
     toUpdate = dataProcessFunction(msg.data);
     console.log(toUpdate);
+    port.postMessage({ updateData: true, payload: toUpdate });
+  }
+
+  if (msg.dataUpdated) {
+    console.log(msg.responseText);
   }
 });
 

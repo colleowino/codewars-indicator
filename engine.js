@@ -8,9 +8,26 @@ function handlePort(port) {
         .then((responseText) => {
           let ids = {};
           responseText.forEach((element) => {
-            ids[element.link] = true;
+            ids[element.id] = true;
           });
           port.postMessage({ useData: true, data: ids });
+        });
+    }
+    if (msg.updateData) {
+      console.log(msg.payload);
+      fetch("http://localhost:3000/completed", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(msg.payload),
+      })
+        .then((response) => response.json())
+        .then((responseText) => {
+          port.postMessage({ dataUpdated: true, responseText });
+        })
+        .catch((error) => {
+          port.postMessage({ errorOccured: true, error });
         });
     }
   });

@@ -1,0 +1,12 @@
+{
+  "name": "codewars-did",
+  "version": "1.0.0",
+  "description": "show undone codewars",
+  "main": "index.js",
+  "author": "colleowino <colleowino@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "json-server": "^0.16.2",
+    "underscore": "^1.11.0"
+  }
+}
