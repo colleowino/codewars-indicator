@@ -1,5 +1,30 @@
 const port = chrome.runtime.connect({ name: "serverConnection" });
 
+const pages = {
+  KATA: "kata",
+  USER: "user",
+  KATALIST: "katalist",
+  MINE: "myown",
+};
+
+function identifyPage() {
+  const page = window.location.href;
+  if (/colleowino\/completed$/.test(page)) {
+    return pages.MINE;
+  }
+  if (/completed$/.test(page)) {
+    return pages.USER;
+  }
+  if (/kata\/latest|search/.test(page)) {
+    return pages.KATALIST;
+  }
+  if (/kata\/\w+$/.test(page)) {
+    return pages.KATA;
+  }
+}
+
+let currentPage = identifyPage();
+
 function buildIcon() {
   let img = document.createElement("img");
   img.setAttribute("src", chrome.runtime.getURL("verified-24px.svg"));
@@ -19,30 +44,6 @@ function extractKata(node) {
     id: snagLink(node.querySelector("a").href),
   };
 }
-
-const pages = {
-  KATA: "kata",
-  USER: "user",
-  KATALIST: "katalist",
-  MINE: "myown",
-};
-
-function whichPage() {
-  const url = window.location.href;
-  if (/colleowino\/completed$/.test(window.location.href)) {
-    return pages.MINE;
-  }
-  if (/completed$/.test(window.location.href)) {
-    return pages.USER;
-  }
-  if (/kata\/latest|search/.test(window.location.href)) {
-    return pages.KATALIST;
-  }
-  if (/kata\/\w+$/.test(window.location.href)) {
-    return pages.KATA;
-  }
-}
-let currentPage = whichPage();
 
 function dataProcessFunction(params) {
   // console.log(params);
@@ -123,13 +124,17 @@ port.onMessage.addListener(function (resp) {
   if (resp.dataAvailable) {
     ids = resp.data;
     markCompletedKatas(ids);
-    setupDOMObserver();
+
+    if (currentPage == pages.MINE || currentPage == pages.USER) {
+      setupDOMObserver();
+    }
   }
 
   if (resp.dataUpdated) {
     markCompletedKatas(ids);
   }
 });
+
 port.postMessage({ fetchData: true });
 
 console.log("Debug: End of script");

@@ -19,7 +19,8 @@
     {
       "matches": [
         "https://www.codewars.com/kata/*",
-        "https://www.codewars.com/users/*/completed"
+        "https://www.codewars.com/users/*/completed",
+        "https://www.codewars.com/collections/*"
       ],
       "js": ["did-what.js"],
       "css": ["styles.css"]
