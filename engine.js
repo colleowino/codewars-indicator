@@ -1,3 +1,21 @@
+chrome.runtime.onConnect.addListener(handlePort);
+
+function handlePort(port) {
+  port.onMessage.addListener(function (msg) {
+    if (msg.fetchData) {
+      fetch("http://localhost:3000/completed")
+        .then((response) => response.json())
+        .then((responseText) => {
+          let ids = {};
+          responseText.forEach((element) => {
+            ids[element.link] = true;
+          });
+          port.postMessage({ useData: true, data: ids });
+        });
+    }
+  });
+}
+
 // chrome.runtime.onInstalled.addListener(function () {
 //   chrome.webNavigation.onCompleted.addListener(
 //     function () {
@@ -7,7 +25,6 @@
 //   );
 // });
 
-console.log("its happening");
 var eventList = [
   // "onBeforeNavigate",
   // "onCreatedNavigationTarget",
@@ -39,15 +56,32 @@ var eventList = [
 //   });
 // });
 
-chrome.runtime.onMessage.addListener(function (url, sender, onSuccess) {
-  fetch(url)
-    .then((response) => response.json())
-    .then((responseText) => {
-      let ids = {};
-      responseText.forEach((element) => {
-        ids[element.link] = true;
-      });
-      onSuccess(ids);
-    });
-  return true; // Will respond asynchronously.
-});
+// chrome.runtime.onMessage.addListener(function (url, sender, onSuccess) {
+// fetch(url)
+//   .then((response) => response.json())
+//   .then((responseText) => {
+//     let ids = {};
+//     responseText.forEach((element) => {
+//       ids[element.link] = true;
+//     });
+//     onSuccess(ids);
+//   });
+//   return true; // Will respond asynchronously.
+// });
+
+// chrome.tabs.query({ url: "https://www.codewars.com/*" }, function (tabArray) {
+//   let Tab = tabArray[0];
+//   console.log(Tab);
+//   var port = chrome.tabs.connect(Tab.id, { name: "dtb" });
+//   // const url = "http://localhost:3000/completed";
+//   port.postMessage({ greeting: "hello", data: [1, 2, 3], dataReady: true });
+//   console.log(port);
+//   // fetch(url)
+//   //   .then((response) => response.json())
+//   //   .then((responseText) => {
+//   //     let ids = {};
+//   //     responseText.forEach((element) => {
+//   //       ids[element.link] = true;
+//   //     });
+//   //   });
+// });

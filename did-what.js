@@ -5,6 +5,11 @@ function buildIcon() {
   return img;
 }
 
+function snagLink(url) {
+  const bits = url.split("/");
+  return bits[bits.length - 1];
+}
+
 function extractMeta(node) {
   return {
     kyu: node.querySelector("span").innerText,
@@ -17,12 +22,6 @@ function addCheckMarks(titles) {
   titles.forEach((x) => {
     x.append(buildIcon());
   });
-}
-let existingTitles = [];
-
-function snagLink(url) {
-  const bits = url.split("/");
-  return bits[bits.length - 1];
 }
 
 function setupObserver() {
@@ -79,17 +78,8 @@ function processList(solved, page) {
       }
     }
   });
-  updateSolved(toUpdate);
   addCheckMarks(chosen);
-}
-
-function updateComplete(status) {
-  console.log(statu);
-}
-
-function updateSolved(payload) {
-  console.log(payload);
-  // chrome.runtime.sendMessage(payload, (data) => updateComplete(data));
+  return toUpdate;
 }
 
 let currentPage = whichPage();
@@ -97,19 +87,30 @@ let currentPage = whichPage();
 function dataProcessFunction(params) {
   // console.log(params);
   if (currentPage == pages.KATA) {
-    processList(params, currentPage);
+    return processList(params, currentPage);
   }
   if (currentPage == pages.KATALIST) {
-    processList(params, currentPage);
+    return processList(params, currentPage);
   }
   if (currentPage == pages.USER) {
-    processList(params, currentPage);
+    return processList(params, currentPage);
   }
   if (currentPage == pages.MINE) {
-    processList(params, currentPage);
+    return processList(params, currentPage);
   }
 }
 
-chrome.runtime.sendMessage("http://localhost:3000/completed", (data) =>
-  dataProcessFunction(data)
-);
+console.log("Debug: executing content script");
+var port = chrome.runtime.connect({ name: "knockknock" });
+
+port.postMessage({ fetchData: true });
+
+port.onMessage.addListener(function (msg) {
+  if (msg.useData) {
+    console.log(msg.data);
+    toUpdate = dataProcessFunction(msg.data);
+    console.log(toUpdate);
+  }
+});
+
+console.log("Debug: End of script");
