@@ -18,12 +18,6 @@ function extractMeta(node) {
   };
 }
 
-function addCheckMarks(titles) {
-  titles.forEach((x) => {
-    x.append(buildIcon());
-  });
-}
-
 function setupObserver() {
   const config = { attributes: false, childList: true, subtree: true };
 
@@ -60,6 +54,12 @@ function whichPage() {
   if (/kata\/\w+$/.test(window.location.href)) {
     return pages.KATA;
   }
+}
+
+function addCheckMarks(titles) {
+  titles.forEach((x) => {
+    x.append(buildIcon());
+  });
 }
 
 function processList(solved = {}, page = pages.MINE) {
@@ -104,21 +104,41 @@ function dataProcessFunction(params) {
   }
 }
 
+const ids = {
+  "563a631f7cbbc236cf0000c2": true,
+  "55ccdf1512938ce3ac000056": true,
+};
+
+function markCompletedKatas(completedKatas) {
+  let kataTitles = document.querySelectorAll(".item-title");
+  const svg = buildIcon();
+
+  kataTitles.forEach((title) => {
+    const metaData = extractMeta(title);
+    if (completedKatas[metaData.id] && !title.lastChild.isEqualNode(svg)) {
+      title.append(buildIcon());
+    }
+  });
+}
+
 console.log("Debug: executing content script");
+
 const port = chrome.runtime.connect({ name: "knockknock" });
 
 port.postMessage({ fetchData: true });
 
-port.onMessage.addListener(function (msg) {
-  if (msg.useData) {
-    console.log(msg.data);
-    toUpdate = dataProcessFunction(msg.data);
-    console.log(toUpdate);
-    port.postMessage({ updateData: true, payload: toUpdate });
+port.onMessage.addListener(function (resp) {
+  if (resp.dataAvailable) {
+    markCompletedKatas(resp.data);
+    // parse through the page
+    // console.log(msg.data);
+    // toUpdate = dataProcessFunction(resp.data);
+    // console.log(toUpdate);
+    // port.postMessage({ updateData: true, payload: toUpdate });
   }
 
-  if (msg.dataUpdated) {
-    console.log(msg.responseText);
+  if (resp.dataUpdated) {
+    console.log(resp.responseText);
   }
 });
 

@@ -10,7 +10,7 @@ function handlePort(port) {
           responseText.forEach((element) => {
             ids[element.id] = true;
           });
-          port.postMessage({ useData: true, data: ids });
+          port.postMessage({ dataAvailable: true, data: ids });
         });
     }
     if (msg.updateData) {
@@ -32,15 +32,6 @@ function handlePort(port) {
     }
   });
 }
-
-// chrome.runtime.onInstalled.addListener(function () {
-//   chrome.webNavigation.onCompleted.addListener(
-//     function () {
-//       alert("This is my favorite website!");
-//     },
-//     { url: [{ urlMatches: "https://www.codewars.com/" }] }
-//   );
-// });
 
 var eventList = [
   // "onBeforeNavigate",
