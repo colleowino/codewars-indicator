@@ -72,7 +72,7 @@ function collectUnsavedKatas(completedKatas) {
       unsavedKatas.push(kata);
     }
   });
-  if (unsavedKatas.length > 0) {
+  if (unsavedKatas.length > 0 && currentPage == pages.MINE) {
     port.postMessage({ updateData: true, payload: unsavedKatas });
   }
   return true;
@@ -91,6 +91,7 @@ function setupDOMObserver() {
     }
     observer.observe(document.querySelector(".items-list"), config);
   });
+  // scrollToBottom();
   observer.observe(document.querySelector(".items-list"), config);
 }
 
@@ -129,6 +130,22 @@ port.onMessage.addListener(function (resp) {
   if (resp.errorOccured) {
     console.log("Network Missing");
   }
+
+  if (resp.pageNavigated) {
+    console.log("Got to a newer page", resp.data);
+  }
 });
 
 port.postMessage({ fetchData: true });
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  console.log(
+    sender.tab
+      ? "from a content script:" + sender.tab.url
+      : "from the extension"
+  );
+  console.log(request);
+  if (request.greeting == "hello") sendResponse({ farewell: "goodbye" });
+
+  return true;
+});
