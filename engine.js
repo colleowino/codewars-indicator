@@ -11,6 +11,10 @@ function handlePort(port) {
             ids[element.id] = true;
           });
           port.postMessage({ dataAvailable: true, data: ids });
+        })
+        .catch((error) => {
+          console.log("error");
+          port.postMessage({ errorOccured: true, error });
         });
     }
     if (msg.updateData) {

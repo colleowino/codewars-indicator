@@ -1,5 +1,9 @@
 const port = chrome.runtime.connect({ name: "serverConnection" });
 
+let GLOBAL_KATA_IDS = {
+  "563a631f7cbbc236cf0000c2": true,
+};
+
 const pages = {
   KATA: "kata",
   USER: "user",
@@ -45,12 +49,6 @@ function extractKata(node) {
   };
 }
 
-let ids = {
-  "563a631f7cbbc236cf0000c2": true,
-  "55ccdf1512938ce3ac000056": true,
-  "540c33513b6532cd58000259": true,
-};
-
 function markCompletedKatas(completedKatas) {
   let kataTitles = document.querySelectorAll(".item-title");
   const svg = buildIcon();
@@ -87,17 +85,14 @@ function setupDOMObserver() {
 
   observer = new MutationObserver((mutations) => {
     observer.disconnect();
-    markCompletedKatas(ids);
+    markCompletedKatas(GLOBAL_KATA_IDS);
     if (currentPage == pages.MINE) {
-      collectUnsavedKatas(ids);
+      collectUnsavedKatas(GLOBAL_KATA_IDS);
     }
-
     observer.observe(document.querySelector(".items-list"), config);
   });
   observer.observe(document.querySelector(".items-list"), config);
 }
-
-console.log("Debug: executing content script");
 
 function scrollToBottom() {
   window.scrollTo({
@@ -109,20 +104,31 @@ function scrollToBottom() {
 
 port.onMessage.addListener(function (resp) {
   if (resp.dataAvailable) {
-    ids = resp.data;
-    markCompletedKatas(ids);
+    GLOBAL_KATA_IDS = resp.data;
+    markCompletedKatas(GLOBAL_KATA_IDS);
 
     if (currentPage == pages.MINE || currentPage == pages.USER) {
-      collectUnsavedKatas(ids);
+      collectUnsavedKatas(GLOBAL_KATA_IDS);
       setupDOMObserver();
+    }
+
+    if (currentPage == pages.KATA) {
+      let kataHeading = document.querySelector("h4").parentElement;
+      let link = window.location.href.split("/");
+      let kataId = link[link.length - 1];
+      if (GLOBAL_KATA_IDS[kataId]) {
+        kataHeading.append(buildIcon());
+      }
     }
   }
 
   if (resp.dataUpdated) {
-    markCompletedKatas(ids);
+    markCompletedKatas(GLOBAL_KATA_IDS);
+  }
+
+  if (resp.errorOccured) {
+    console.log("Network Missing");
   }
 });
 
 port.postMessage({ fetchData: true });
-
-console.log("Debug: End of script");
