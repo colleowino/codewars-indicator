@@ -22,7 +22,7 @@ function identifyPage() {
   if (/kata\/latest|search/.test(page)) {
     return pages.KATALIST;
   }
-  if (/kata\/\w+$/.test(page)) {
+  if (/kata\//.test(page)) {
     return pages.KATA;
   }
 }
@@ -110,13 +110,18 @@ port.onMessage.addListener(function (resp) {
     GLOBAL_KATA_IDS = resp.data;
     markCompletedKatas(GLOBAL_KATA_IDS);
 
-    if (currentPage != pages.KATA) {
+    if (
+      currentPage == pages.MINE ||
+      currentPage == pages.USER ||
+      currentPage == pages.KATALIST
+    ) {
       setupDOMObserver();
     }
 
     if (currentPage == pages.KATA) {
       let kataHeading = document.querySelector("h4").parentElement;
-      let link = window.location.href.split("/");
+      const page = window.location.href.toString().match(/kata\/(\w+)/g);
+      let link = page[0].split("/");
       let kataId = link[link.length - 1];
       if (GLOBAL_KATA_IDS[kataId]) {
         kataHeading.append(buildIcon());
