@@ -62,6 +62,9 @@ function markCompletedKatas(completedKatas) {
 }
 
 function collectUnsavedKatas(completedKatas) {
+  if (currentPage != pages.MINE) {
+    return true;
+  }
   let kataTitles = document.querySelectorAll(".item-title");
   let unsavedKatas = [];
 
@@ -72,7 +75,7 @@ function collectUnsavedKatas(completedKatas) {
       unsavedKatas.push(kata);
     }
   });
-  if (unsavedKatas.length > 0 && currentPage == pages.MINE) {
+  if (unsavedKatas.length > 0) {
     port.postMessage({ updateData: true, payload: unsavedKatas });
   }
   return true;
@@ -86,9 +89,7 @@ function setupDOMObserver() {
   observer = new MutationObserver((mutations) => {
     observer.disconnect();
     markCompletedKatas(GLOBAL_KATA_IDS);
-    if (currentPage == pages.MINE) {
-      collectUnsavedKatas(GLOBAL_KATA_IDS);
-    }
+    collectUnsavedKatas(GLOBAL_KATA_IDS);
     observer.observe(document.querySelector(".items-list"), config);
   });
   // scrollToBottom();
@@ -108,8 +109,8 @@ port.onMessage.addListener(function (resp) {
     GLOBAL_KATA_IDS = resp.data;
     markCompletedKatas(GLOBAL_KATA_IDS);
 
-    if (currentPage == pages.MINE || currentPage == pages.USER) {
-      collectUnsavedKatas(GLOBAL_KATA_IDS);
+    if (currentPage != pages.KATA) {
+      console.log("some kata list is here");
       setupDOMObserver();
     }
 
@@ -130,22 +131,6 @@ port.onMessage.addListener(function (resp) {
   if (resp.errorOccured) {
     console.log("Network Missing");
   }
-
-  if (resp.pageNavigated) {
-    console.log("Got to a newer page", resp.data);
-  }
 });
 
 port.postMessage({ fetchData: true });
-
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  console.log(
-    sender.tab
-      ? "from a content script:" + sender.tab.url
-      : "from the extension"
-  );
-  console.log(request);
-  if (request.greeting == "hello") sendResponse({ farewell: "goodbye" });
-
-  return true;
-});
