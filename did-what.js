@@ -93,6 +93,7 @@ function setupDOMObserver() {
     observer.observe(document.querySelector(".items-list"), config);
   });
   // scrollToBottom();
+  collectUnsavedKatas(GLOBAL_KATA_IDS); // insert new values at the top of the completed list
   observer.observe(document.querySelector(".items-list"), config);
 }
 
@@ -110,7 +111,6 @@ port.onMessage.addListener(function (resp) {
     markCompletedKatas(GLOBAL_KATA_IDS);
 
     if (currentPage != pages.KATA) {
-      console.log("some kata list is here");
       setupDOMObserver();
     }
 
