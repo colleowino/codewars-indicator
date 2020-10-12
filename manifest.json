@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "dito",
+  "name": "kata-complete",
   "description": "An easier way to see what I did or didn't do ",
-  "version": "1.3.7",
+  "version": "1.3.8",
   "icons": {
     "32": "images/codewars.png",
     "128": "images/codewars.png"
@@ -22,7 +22,7 @@
         "https://www.codewars.com/users/*/completed",
         "https://www.codewars.com/collections/*"
       ],
-      "js": ["did-what.js"],
+      "js": ["main.js"],
       "css": ["styles.css"]
     }
   ],
